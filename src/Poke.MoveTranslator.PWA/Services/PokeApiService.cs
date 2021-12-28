@@ -18,6 +18,12 @@ public class PokeApiService : IPokeApiService, IDisposable
         return result.Results.Select(l => l.Name).ToArray();
     }
 
+    public async Task<Move> GetMove(string englishName)
+    {
+        Move result = await PokeApi.GetResourceAsync<Move>(englishName);
+        return result;
+    }
+
     public void Dispose()
     {
         PokeApi.Dispose();
@@ -41,6 +47,11 @@ public class PokeApiServiceCachedByLocalStorage : IPokeApiService
     {
         return await LocalStorage.GetOrAddAsync(LocalStorageKeyPrefix + "/languages", ApiService.GetLanguages);
     }
+
+    public Task<Move> GetMove(string englishName)
+    {
+        return LocalStorage.GetOrAddAsync(LocalStorageKeyPrefix + "/move/" + englishName, () => ApiService.GetMove(englishName));
+    }
 }
 
 public static class LocalStorageServiceExtensions
@@ -62,4 +73,5 @@ public static class LocalStorageServiceExtensions
 public interface IPokeApiService
 {
     Task<string[]> GetLanguages();
+    Task<Move> GetMove(string englishName);
 }
