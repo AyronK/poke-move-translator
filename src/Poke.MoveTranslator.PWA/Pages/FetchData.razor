@@ -19,6 +19,8 @@
 }
 else
 {
+    <div>English Name: @Move.Names.First(n => n.Language.Name == "en").Name</div>
+    
     @JsonConvert.SerializeObject(Move)
 }
 
@@ -48,7 +50,8 @@ else
     private async Task LoadMove()
     {
         IsLoading = true;
-        Move = await PokeApiService.GetMove(MoveName); // unfortunately REST api cannot into languages, check out GraphQL https://beta.pokeapi.co/graphql/console/
+        Move = await PokeApiService.GetMove(MoveName, "es"); 
+        
         IsLoading = false;
     }
 
