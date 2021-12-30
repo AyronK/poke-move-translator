@@ -70,7 +70,7 @@ public class MoveTranslatorBase : ComponentBase
         Move = await PokeApi.GetMove(MoveName, Language);
 
         NameByLanguage pair = new(MoveName, Language);
-        if (!LastValues.Contains(pair))
+        if (Move is not null && !LastValues.Contains(pair))
         {
             LastValues.Add(pair);
         }
