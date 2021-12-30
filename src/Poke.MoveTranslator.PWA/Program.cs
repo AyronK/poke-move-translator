@@ -1,26 +1,47 @@
 using Blazored.LocalStorage;
 using GraphQL.Client.Http;
-using GraphQL.Client.Serializer.Newtonsoft;
+using GraphQL.Client.Serializer.SystemTextJson;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Poke.MoveTranslator.PWA;
 using MudBlazor.Services;
-using Newtonsoft.Json;
 using Poke.MoveTranslator.PWA.Services;
+using Poke.MoveTranslator.PWA.Services.Cache;
+using Poke.MoveTranslator.PWA.Services.PokeApi;
 using PokeApiNet;
 
-var builder = WebAssemblyHostBuilder.CreateDefault(args);
-builder.RootComponents.Add<App>("#app");
-builder.RootComponents.Add<HeadOutlet>("head::after");
+namespace Poke.MoveTranslator.PWA;
 
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-builder.Services.AddMudServices();
+public static class Program
+{
+    public static async Task Main(string[] args)
+    {
+        WebAssemblyHostBuilder builder = WebAssemblyHostBuilder.CreateDefault(args);
+        builder.RootComponents.Add<App>("#app");
+        builder.RootComponents.Add<HeadOutlet>("head::after");
 
-builder.Services.AddBlazoredLocalStorage();
+        ConfigureServices(builder);
 
-builder.Services.AddScoped<PokeApiClient>();
+        await builder.Build().RunAsync();
+    }
 
-builder.Services.AddScoped<IPokeApiService, PokeApiServiceCachedByLocalStorage>((c) => 
-    new PokeApiServiceCachedByLocalStorage(new PokeApiService(c.GetRequiredService<PokeApiClient>(), new GraphQLHttpClient("https://beta.pokeapi.co/graphql/v1beta", new NewtonsoftJsonSerializer())), c.GetRequiredService<ILocalStorageService>()));
+    private static void ConfigureServices(WebAssemblyHostBuilder builder)
+    {
+        builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+        builder.Services.AddMudServices();
+        builder.Services.AddBlazoredLocalStorage();
 
-await builder.Build().RunAsync();
+        builder.Services.AddScoped<PokeApiClient>();
+        builder.Services.AddScoped(PokemonApiFactory);
+    }
+
+    private static IPokemonApi PokemonApiFactory(IServiceProvider c)
+    {
+        GraphQLHttpClient pokemonGraphQLApi = new("https://beta.pokeapi.co/graphql/v1beta", new SystemTextJsonSerializer());
+        PokeApiClient pokeApiClient = c.GetRequiredService<PokeApiClient>();
+        
+        ILocalStorageService localStorageService = c.GetRequiredService<ILocalStorageService>();
+        PokemonFacade pokemonFacade = new(pokeApiClient, pokemonGraphQLApi);
+        
+        return new PokemonApiLocalStorageCache(pokemonFacade, localStorageService);
+    }
+}
