@@ -7,14 +7,14 @@
     {
         <MudPaper Elevation="0" Square="true">
             <MudGrid Justify="@Justify.Center">
-                @if (LastValues.Count > 0)
+                @if (SearchHistory.Count > 0)
                 {
                     <MudItem xs="12">
-                        <MudText Typo="Typo.h6">Last moves</MudText>
+                        <MudText Typo="Typo.h6">Search History</MudText>
                         <MudChipSet AllClosable="true" Class="py-4" Style="overflow-x: auto;white-space: nowrap">
-                            @foreach (NameByLanguage item in LastValues)
+                            @foreach (NameByLanguage item in SearchHistory)
                             {
-                                <MudChip Text="@item.Name" OnClick="@(() => OnLastValueClick(item))" OnClose="@(() => LastValues.Remove(item))"/>
+                                <MudChip Text="@item.Name" OnClick="@(() => OnLastValueClick(item))" OnClose="@(() => SearchHistory.Remove(item))"/>
                             }
                         </MudChipSet>
                     </MudItem>
@@ -27,9 +27,9 @@
                 </MudItem>
                 <MudItem xs="4" sm="4" md="2">
                     <MudSelect T="string" @bind-Value="Language" Label="Language" AnchorOrigin="Origin.BottomCenter" Disabled="@IsLoading">
-                        @foreach (string languageCode in languages.Keys)
+                        @foreach (string languageCode in Languages.Keys)
                         {
-                            <MudSelectItem Value="@languageCode">@(languages[languageCode])</MudSelectItem>
+                            <MudSelectItem Value="@languageCode">@(Languages[languageCode])</MudSelectItem>
                         }
                     </MudSelect>
                 </MudItem>

@@ -19,16 +19,11 @@ public class PokemonApiLocalStorageCache : IPokemonApi
 
     public async Task<Dictionary<string,string>> GetLanguages()
     {
-        return await LocalStorage.GetOrAddAsync(LocalStorageKeyPrefix + "/languages", ApiService.GetLanguages);
-    }
-
-    public Task<Move> GetMove(string englishName)
-    {
-        return LocalStorage.GetOrAddAsync(LocalStorageKeyPrefix + "/move/" + englishName, () => ApiService.GetMove(englishName));
+        return await LocalStorage.GetOrCreateAsync(LocalStorageKeyPrefix + "/languages", ApiService.GetLanguages);
     }
 
     public Task<Move> GetMove(string name, string language)
     {
-        return LocalStorage.GetOrAddAsync(LocalStorageKeyPrefix + "/" + language + "/move/" + name, () => ApiService.GetMove(name, language));
+        return LocalStorage.GetOrCreateAsync(LocalStorageKeyPrefix + "/" + language + "/move/" + name.ToLowerInvariant(), () => ApiService.GetMove(name, language));
     }
 }

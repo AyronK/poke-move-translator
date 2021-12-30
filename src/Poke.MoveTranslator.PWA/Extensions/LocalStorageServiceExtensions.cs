@@ -4,7 +4,7 @@ namespace Poke.MoveTranslator.PWA.Extensions;
 
 public static class LocalStorageServiceExtensions
 {
-    public static async Task<T> GetOrAddAsync<T>(this ILocalStorageService localStorageService, string key, Func<Task<T>> valueFactory) where T : class
+    public static async Task<T> GetOrCreateAsync<T>(this ILocalStorageService localStorageService, string key, Func<Task<T>> valueFactory) where T : class
     {
         bool exists = await localStorageService.ContainKeyAsync(key);
 

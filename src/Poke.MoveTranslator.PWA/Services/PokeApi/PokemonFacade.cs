@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using GraphQL;
 using GraphQL.Client.Abstractions;
+using Microsoft.Extensions.Caching.Memory;
 using PokeApiNet;
 
 namespace Poke.MoveTranslator.PWA.Services.PokeApi;
@@ -9,11 +10,13 @@ public class PokemonFacade : IPokemonApi, IDisposable
 {
     private PokeApiClient PokeApi { get; }
     private IGraphQLClient GraphQLClient { get; }
+    private IMemoryCache MemoryCache { get; }
 
-    public PokemonFacade(PokeApiClient pokeApi, IGraphQLClient graphQLClient)
+    public PokemonFacade(PokeApiClient pokeApi, IGraphQLClient graphQLClient, IMemoryCache memoryCache)
     {
         PokeApi = pokeApi;
         GraphQLClient = graphQLClient;
+        MemoryCache = memoryCache;
     }
 
     public async Task<Dictionary<string,string>> GetLanguages()
@@ -36,27 +39,36 @@ public class PokemonFacade : IPokemonApi, IDisposable
         {
             return await GetMoveByEnglishName(name);
         }
+
+        string cacheKey = $"{nameof(PokemonFacade)}.{nameof(GetMove)}.({name},({language})";
         
+        GraphQLResponse<PokemonMoveCollectionGraphQL> moveResult = await MemoryCache
+            .GetOrCreateAsync(cacheKey, async (_) => await GetMoveFromGraphQL(name, language));
+
+        if (moveResult.Data.Move.Length == 1)
+        {
+            return await GetMove(moveResult.Data.Move[0].Id);
+        }
+
+        return null;
+    }
+
+    private async Task<GraphQLResponse<PokemonMoveCollectionGraphQL>> GetMoveFromGraphQL(string name, string language)
+    {
         const string query = @"
 query getMoveByNameAndLanguage($name: String, $language: String) {
   move: pokemon_v2_move(limit: 1, where: {pokemon_v2_movenames: {name: {_ilike: $name}, _and: {pokemon_v2_language: {name: {_eq: $language}}}}}) {
     id
   }
 }";
-        GraphQLRequest moveRequest = new () {
+        GraphQLRequest moveRequest = new()
+        {
             Query = query,
             OperationName = "getMoveByNameAndLanguage",
             Variables = new { name, language }
         };
-        
-        GraphQLResponse<PokemonMoveCollectionGraphQL> result = await GraphQLClient.SendQueryAsync<PokemonMoveCollectionGraphQL>(moveRequest);
-        
-        if (result.Data.Move.Length == 1)
-        {
-            return await GetMove(result.Data.Move[0].Id);
-        }
 
-        return null;
+        return await GraphQLClient.SendQueryAsync<PokemonMoveCollectionGraphQL>(moveRequest);
     }
 
     private async Task<Move> GetMoveByEnglishName(string englishName)
