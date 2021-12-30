@@ -1,0 +1,13 @@
+﻿@page "/move-translator"
+@inject HttpClient Http
+@using Poke.MoveTranslator.PWA.Services
+@using Blazored.LocalStorage
+@inject IPokemonApi PokeApiService
+@inject ILocalStorageService LocalStorageService
+
+<PageTitle>Move Translator</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">Poke move</MudText>
+<MudText Class="mb-8">This component demonstrates fetching data from the server.</MudText>
+
+<MoveTranslator/>

@@ -20,6 +20,10 @@
 		<PackageReference Include="MudBlazor" Version="6.0.2" />
 		<PackageReference Include="PokeApiNet" Version="3.0.3" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Components\_Common" />
+	</ItemGroup>
 	
 	
 </Project>
