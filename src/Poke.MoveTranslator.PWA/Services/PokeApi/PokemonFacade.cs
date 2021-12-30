@@ -39,7 +39,7 @@ public class PokemonFacade : IPokemonApi, IDisposable
         
         const string query = @"
 query getMoveByNameAndLanguage($name: String, $language: String) {
-  move: pokemon_v2_move(limit: 1, where: {pokemon_v2_movenames: {name: {_iregex: $name}, _and: {pokemon_v2_language: {name: {_eq: $language}}}}}) {
+  move: pokemon_v2_move(limit: 1, where: {pokemon_v2_movenames: {name: {_ilike: $name}, _and: {pokemon_v2_language: {name: {_eq: $language}}}}}) {
     id
   }
 }";
