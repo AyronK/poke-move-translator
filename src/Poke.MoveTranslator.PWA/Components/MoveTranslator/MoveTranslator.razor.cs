@@ -69,8 +69,10 @@ public class MoveTranslatorBase : ComponentBase
         IsLoading = true;
         Move = await PokeApi.GetMove(MoveName, Language);
 
-        NameByLanguage pair = new(MoveName, Language);
-        if (!LastValues.Contains(pair))
+        string moveNameInLanguage = Move?.Names.FirstOrDefault(n => n.Language.Name == Language)?.Name ?? MoveName; //todo refactor
+        
+        NameByLanguage pair = new(moveNameInLanguage, Language);
+        if (Move is not null && !LastValues.Contains(pair))
         {
             LastValues.Add(pair);
         }
