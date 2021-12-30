@@ -2,46 +2,63 @@
 @using Newtonsoft.Json
 @inherits MoveTranslatorBase
 
-@if (!IsInitializing)
-{
-    <MudForm>
-        <MudGrid Justify="@Justify.Center">
-            @if (LastValues.Count > 0)
-            {
+<MudPaper Class="d-flex flex-column" Elevation="0" Square="true">
+    @if (!IsInitializing)
+    {
+        <MudPaper Elevation="0" Square="true">
+            <MudGrid Justify="@Justify.Center">
+                @if (LastValues.Count > 0)
+                {
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.h6">Last moves</MudText>
+                        <MudChipSet AllClosable="true" Class="py-4" Style="overflow-x: auto;white-space: nowrap">
+                            @foreach (NameByLanguage item in LastValues)
+                            {
+                                <MudChip Text="@item.Name" OnClick="@(() => OnLastValueClick(item))" OnClose="@(() => LastValues.Remove(item))"/>
+                            }
+                        </MudChipSet>
+                    </MudItem>
+                }
                 <MudItem xs="12">
-                    <MudText>Last moves</MudText>
-                    <MudChipSet AllClosable="true" Style="overflow-x: auto;white-space: nowrap">
-                        @foreach (NameByLanguage item in LastValues)
-                        {
-                            <MudChip Text="@item.Name" OnClick="@(() => OnLastValueClick(item))" OnClose="@(() => LastValues.Remove(item))"/>
-                        }
-                    </MudChipSet>
+                    <MudText Typo="Typo.h6">Search</MudText>
                 </MudItem>
-            }
-
-            <MudItem xs="12" sm="6" md="2">
-                <MudTextField @bind-Value="MoveName" Label="Move name" Variant="Variant.Text" Disabled="@IsLoading"></MudTextField>
-            </MudItem>
-            <MudItem xs="12" sm="6" md="6">
-                <MudSelect T="string" @bind-Value="Language" Label="Language" AnchorOrigin="Origin.BottomCenter" Disabled="@IsLoading">
-                    @foreach (string languageCode in languages.Keys)
-                    {
-                        <MudSelectItem Value="@languageCode">@(languages[languageCode])</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
-            <MudItem xs="12" sm="6" md="4">
-                <MudFab Color="Color.Primary" Icon="@Icons.Material.Filled.PlayCircleFilled" aria-label="play" OnClick="@LoadMove" Class="ml-auto d-flex d-sm-inline-flex" Disabled="IsButtonDisabled"/>
-            </MudItem>
-        </MudGrid>
-    </MudForm>
-}
-
-@if (IsLoading || IsInitializing)
-{
-    <MudProgressCircular Color="Color.Default" Indeterminate="true"/>
-}
-else if (Move != null)
-{
-    <div>English Name: @Move.Names.First(n => n.Language.Name == "en").Name</div>
-}
+                <MudItem xs="8" sm="8" md="6">
+                    <MudTextField @bind-Value="MoveName" Label="Move name" Variant="Variant.Text" Disabled="@IsLoading"></MudTextField>
+                </MudItem>
+                <MudItem xs="4" sm="4" md="2">
+                    <MudSelect T="string" @bind-Value="Language" Label="Language" AnchorOrigin="Origin.BottomCenter" Disabled="@IsLoading">
+                        @foreach (string languageCode in languages.Keys)
+                        {
+                            <MudSelectItem Value="@languageCode">@(languages[languageCode])</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="4">
+                    <MudFab Color="Color.Primary" Icon="@Icons.Material.Filled.PlayCircleFilled" aria-label="play" OnClick="@LoadMove" Class="ml-auto d-flex d-sm-inline-flex" Disabled="IsButtonDisabled"/>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+    }
+    @if (IsLoading || IsInitializing)
+    {
+        <MudPaper Elevation="0" Square="true">
+            <MudText Align="Align.Center">
+                <MudProgressCircular Color="Color.Default" Indeterminate="true"/>
+            </MudText>
+        </MudPaper>
+    }
+    else if (Move != null)
+    {
+        <MudDivider Class="my-8"/>
+        <MudPaper Elevation="0" Square="true">
+            <MudText Typo="Typo.h6">@MoveEnglishName</MudText>
+            <MudChip Label="true" Variant="Variant.Outlined" Size="Size.Small">@Move.Type.Name</MudChip>
+            <MudText>
+                @Move.FlavorTextEntries.FirstOrDefault(f => f.Language.Name == "en")?.FlavorText
+            </MudText>
+            <MudText>
+                @Move.EffectEntries.FirstOrDefault(f => f.Language.Name == "en")?.Effect
+            </MudText>
+        </MudPaper>
+    }
+</MudPaper>

@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
+using MudBlazor;
 using Poke.MoveTranslator.PWA.Services;
 using PokeApiNet;
 
@@ -10,7 +11,6 @@ namespace Poke.MoveTranslator.PWA.Components;
 public class MoveTranslatorBase : ComponentBase
 {
     protected Dictionary<string, string> languages;
-
     [Inject]
     public ILocalStorageService LocalStorageService { get; set; }
     
@@ -21,6 +21,7 @@ public class MoveTranslatorBase : ComponentBase
     public bool IsLoading { get; set; }
     public bool IsInitializing { get; set; }
     public Move Move { get; set; }
+    public string MoveEnglishName => Move?.Names.First(n => n.Language.Name == "en").Name;
 
     protected bool IsButtonDisabled => IsInitializing || IsLoading || string.IsNullOrWhiteSpace(Language) || string.IsNullOrWhiteSpace(MoveName);
 
