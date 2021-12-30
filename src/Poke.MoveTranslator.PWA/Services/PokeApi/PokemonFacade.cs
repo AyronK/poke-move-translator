@@ -1,5 +1,3 @@
-using System.Globalization;
-using System.Text;
 using System.Text.Json.Serialization;
 using GraphQL;
 using GraphQL.Client.Abstractions;

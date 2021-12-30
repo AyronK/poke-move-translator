@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
-using MudBlazor;
 using Poke.MoveTranslator.PWA.Services;
 using PokeApiNet;
 
