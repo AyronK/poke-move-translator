@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using Poke.MoveTranslator.PWA.Const;
 using Poke.MoveTranslator.PWA.Extensions;
 using Poke.MoveTranslator.PWA.Services;
 using Poke.MoveTranslator.PWA.Shared;
@@ -14,6 +14,7 @@ public class MoveTranslatorBase : ComponentBase
 {
     private const string SearchHistoryStorageKey = "SearchHistory";
     private const string LastLanguageStorageKey = "LastLanguage";
+    
     private string _language;
 
     [Inject]
@@ -30,7 +31,7 @@ public class MoveTranslatorBase : ComponentBase
     protected Move Move { get; private set; }
     protected Dictionary<string, string> Languages { get; private set; }
     protected Dictionary<string, string> MoveNameSuggestions { get; } = new();
-    protected string MoveEnglishName => Move?.GetMoveName("en");
+    protected string MoveEnglishName => Move?.GetMoveName(PokeConst.EnglishLanguage);
     protected bool IsMoveLoadDisabled => IsInitializing || IsLoading || string.IsNullOrWhiteSpace(MoveName);
     protected ObservableCollection<NameByLanguage> SearchHistory { get; private set; }
 
@@ -57,7 +58,7 @@ public class MoveTranslatorBase : ComponentBase
 
     public MoveTranslatorBase()
     {
-        _language = "en";
+        _language = PokeConst.EnglishLanguage;
         MoveName = string.Empty;
     }
 
@@ -65,7 +66,7 @@ public class MoveTranslatorBase : ComponentBase
     {
         IsInitializing = true;
         Languages = await PokeApi.GetLanguages();
-        Language = await LocalStorageService.GetItemAsync<string>(LastLanguageStorageKey) ?? "en";
+        Language = await LocalStorageService.GetItemAsync<string>(LastLanguageStorageKey) ?? PokeConst.EnglishLanguage;
         NameByLanguage[] searchHistoryFromLocalStorage = await LocalStorageService.GetItemAsync<NameByLanguage[]>(SearchHistoryStorageKey) ?? Array.Empty<NameByLanguage>();
 
         if (searchHistoryFromLocalStorage.Length > 3)
@@ -89,7 +90,7 @@ public class MoveTranslatorBase : ComponentBase
 
         if (MoveNameSuggestions.ContainsValue(MoveName))
         {
-            Move = await PokeApi.GetMove(MoveNameSuggestions.Single(k => k.Value == MoveName).Key, "en");
+            Move = await PokeApi.GetMove(MoveNameSuggestions.Single(k => k.Value == MoveName).Key, PokeConst.EnglishLanguage);
         }
         else
         {

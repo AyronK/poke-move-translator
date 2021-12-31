@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using GraphQL;
 using GraphQL.Client.Abstractions;
 using Microsoft.Extensions.Caching.Memory;
+using Poke.MoveTranslator.PWA.Const;
 using Poke.MoveTranslator.PWA.Extensions;
 using PokeApiNet;
 
@@ -32,12 +33,12 @@ public class PokemonFacade : IPokemonApi, IDisposable
     private static string GetDisplayName(Language language)
     {
         string nativeName = language.Names.FirstOrDefault(n => n.Language.Name == language.Name)?.Name;
-        return nativeName ?? language.Names.FirstOrDefault(n => n.Language.Name == "en")?.Name ?? language.Name;
+        return nativeName ?? language.Names.FirstOrDefault(n => n.Language.Name == PokeConst.EnglishLanguage)?.Name ?? language.Name;
     }
 
     public async Task<Move> GetMove(string name, string language)
     {
-        if (language == "en" && await GetMoveByEnglishName(name) is { } moveByEnglishNameResult)
+        if (language == PokeConst.EnglishLanguage && await GetMoveByEnglishName(name) is { } moveByEnglishNameResult)
         {
             return moveByEnglishNameResult;
         }

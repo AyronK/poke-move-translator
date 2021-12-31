@@ -23,6 +23,7 @@
 
 	<ItemGroup>
 	  <Folder Include="Components\_Common" />
+	  <Folder Include="Const" />
 	</ItemGroup>
 	
 	
