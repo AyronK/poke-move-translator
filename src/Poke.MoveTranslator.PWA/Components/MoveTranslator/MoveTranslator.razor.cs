@@ -21,10 +21,10 @@ public class MoveTranslatorBase : ComponentBase
 
     [Inject]
     public IPokemonApi PokeApi { get; set; }
-    
+
     [CascadingParameter]
     public ErrorHandler ErrorHandler { get; set; }
-    
+
     protected bool IsLoading { get; private set; }
     protected bool IsInitializing { get; private set; }
     protected Move Move { get; private set; }
@@ -66,15 +66,15 @@ public class MoveTranslatorBase : ComponentBase
         IsInitializing = true;
         Languages = await PokeApi.GetLanguages();
         Language = await LocalStorageService.GetItemAsync<string>(LastLanguageStorageKey) ?? "en";
-        SearchHistory = new ObservableCollection<NameByLanguage>(await LocalStorageService.GetItemAsync<NameByLanguage[]>(SearchHistoryStorageKey) ?? Array.Empty<NameByLanguage>());
-        SearchHistory.CollectionChanged += async (_, a) =>
+        NameByLanguage[] searchHistoryFromLocalStorage = await LocalStorageService.GetItemAsync<NameByLanguage[]>(SearchHistoryStorageKey) ?? Array.Empty<NameByLanguage>();
+
+        if (searchHistoryFromLocalStorage.Length > 3)
         {
-            await LocalStorageService.SetItemAsync(SearchHistoryStorageKey, SearchHistory.ToArray());
-            if (SearchHistory.Count >= 3 && a.Action == NotifyCollectionChangedAction.Add)
-            {
-                SearchHistory.RemoveAt(0);
-            }
-        };
+            searchHistoryFromLocalStorage = searchHistoryFromLocalStorage.TakeLast(3).ToArray();
+        }
+        
+        SearchHistory = new ObservableCollection<NameByLanguage>(searchHistoryFromLocalStorage);
+        SearchHistory.CollectionChanged += async (_, a) => { await LocalStorageService.SetItemAsync(SearchHistoryStorageKey, SearchHistory.ToArray()); };
         IsInitializing = false;
     }
 
@@ -84,7 +84,7 @@ public class MoveTranslatorBase : ComponentBase
         {
             return;
         }
-        
+
         IsLoading = true;
 
         if (MoveNameSuggestions.ContainsValue(MoveName))
@@ -95,9 +95,9 @@ public class MoveTranslatorBase : ComponentBase
         {
             Move = await PokeApi.GetMove(MoveName.Trim(), Language);
         }
-        
+
         MoveNameSuggestions.Clear();
-        
+
         if (Move is null)
         {
             Move[] other = await PokeApi.SearchMoves(MoveName.Trim(), Language);
@@ -126,7 +126,12 @@ public class MoveTranslatorBase : ComponentBase
 
             if (!SearchHistory.Contains(nameByLanguage))
             {
-                SearchHistory.Add(nameByLanguage);
+                if (SearchHistory.Count >= 3)
+                {
+                    SearchHistory.RemoveAt(0);
+                }
+
+                SearchHistory.Insert(0, nameByLanguage);
             }
         }
 
