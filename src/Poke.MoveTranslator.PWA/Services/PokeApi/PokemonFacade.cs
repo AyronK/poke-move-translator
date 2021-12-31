@@ -59,7 +59,7 @@ public class PokemonFacade : IPokemonApi, IDisposable
         string cacheKey = $"{nameof(PokemonFacade)}.{nameof(SearchMoves)}.({searchByName},({language})";
         
         GraphQLResponse<PokemonMoveCollectionGraphQL> moveResult = await MemoryCache
-            .GetOrCreateAsync(cacheKey, async (_) => await QueryMoveByNameAndLanguage(searchByName + "%", language, 5));
+            .GetOrCreateAsync(cacheKey, async (_) => await QueryMoveByNameAndLanguage(searchByName + "%", language, 3));
 
         Move[] moves = await Task.WhenAll(moveResult.Data.Moves.Select(async m => await GetMove(m.Id)));
         return moves.OrderBy(r => r.GetMoveName(language)).ToArray();

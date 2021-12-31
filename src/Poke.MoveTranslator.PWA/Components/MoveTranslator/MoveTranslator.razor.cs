@@ -55,12 +55,12 @@ public class MoveTranslatorBase : ComponentBase
     {
         IsInitializing = true;
         Languages = await PokeApi.GetLanguages();
-        Language = await LocalStorageService.GetItemAsync<string>(LastLanguageStorageKey);
+        Language = await LocalStorageService.GetItemAsync<string>(LastLanguageStorageKey) ?? "en";
         SearchHistory = new ObservableCollection<NameByLanguage>(await LocalStorageService.GetItemAsync<NameByLanguage[]>(SearchHistoryStorageKey) ?? Array.Empty<NameByLanguage>());
         SearchHistory.CollectionChanged += async (_, a) =>
         {
             await LocalStorageService.SetItemAsync(SearchHistoryStorageKey, SearchHistory.ToArray());
-            if (SearchHistory.Count >= 10 && a.Action == NotifyCollectionChangedAction.Add)
+            if (SearchHistory.Count >= 3 && a.Action == NotifyCollectionChangedAction.Add)
             {
                 SearchHistory.RemoveAt(0);
             }
