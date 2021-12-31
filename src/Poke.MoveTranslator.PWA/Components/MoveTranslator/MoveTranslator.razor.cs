@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using Poke.MoveTranslator.PWA.Extensions;
 using Poke.MoveTranslator.PWA.Services;
+using Poke.MoveTranslator.PWA.Shared;
 using PokeApiNet;
 
 namespace Poke.MoveTranslator.PWA.Components;
@@ -20,6 +21,9 @@ public class MoveTranslatorBase : ComponentBase
 
     [Inject]
     public IPokemonApi PokeApi { get; set; }
+    
+    [CascadingParameter]
+    public ErrorHandler ErrorHandler { get; set; }
 
     protected bool IsLoading { get; private set; }
     protected bool IsInitializing { get; private set; }

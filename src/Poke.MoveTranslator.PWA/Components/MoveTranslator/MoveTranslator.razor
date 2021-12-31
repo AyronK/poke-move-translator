@@ -57,7 +57,7 @@
                     <MudChipSet AllClosable="true" Class="py-1" Style="overflow-x: auto;white-space: nowrap">
                         @foreach (NameByLanguage item in SearchHistory)
                         {
-                            <MudChip Text="@item.Name" OnClick="@(() => OnLastValueClick(item))" OnClose="@(() => SearchHistory.Remove(item))" Size="@Size.Small"/>
+                            <MudChip Text="@item.Name" OnClick="@(ErrorHandler.Bind(() => OnLastValueClick(item)))" OnClose="@(() => SearchHistory.Remove(item))" Size="@Size.Small"/>
                         }
                     </MudChipSet>
                 </MudItem>
@@ -69,7 +69,7 @@
                     <MudChipSet Class="py-1" Style="overflow-x: auto;white-space: nowrap">
                         @foreach (string suggestion in MoveNameSuggestions.Values)
                         {
-                            <MudChip Text="@suggestion" Variant="Variant.Outlined" OnClick="@(async () => { MoveName = suggestion; await LoadMove();})" Size="@Size.Small"/>
+                            <MudChip Text="@suggestion" Variant="Variant.Outlined" OnClick="@(ErrorHandler.Bind(async () => { MoveName = suggestion; await LoadMove();}))" Size="@Size.Small"/>
                         }
                     </MudChipSet>
                 </MudItem>
@@ -83,10 +83,12 @@
                 </MudSelect>
             </MudItem>
             <MudItem xs="5">
-                <MudTextField @bind-Value="MoveName" Label="Move name" Variant="Variant.Text" Disabled="@IsLoading" AutoFocus="true" OnKeyPress="@(async (k) => { if (k.Key == "Enter"){await LoadMove();}})"/>
+                <ErrorBoundary>
+                    <MudTextField @bind-Value="MoveName" Label="Move name" Variant="Variant.Text" Disabled="@IsLoading" AutoFocus="true" OnKeyPress="@(ErrorHandler.Bind(async (KeyboardEventArgs k) => { if (k.Key == "Enter"){await LoadMove();}}))"/>
+                </ErrorBoundary>
             </MudItem>
             <MudItem xs="3">
-                <MudFab Color="Color.Primary" Icon="@Icons.Material.Filled.PlayCircleFilled" aria-label="play" OnClick="@LoadMove" Class="ml-auto d-flex d-sm-inline-flex" Disabled="IsButtonDisabled"/>
+                <MudFab Color="Color.Primary" Icon="@Icons.Material.Filled.PlayCircleFilled" aria-label="play" OnClick="@ErrorHandler.Bind(LoadMove)" Class="ml-auto d-flex d-sm-inline-flex" Disabled="IsButtonDisabled"/>
             </MudItem>
         </MudGrid>
     }
