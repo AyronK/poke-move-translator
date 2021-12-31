@@ -14,7 +14,6 @@ public class MoveTranslatorBase : ComponentBase
     private const string SearchHistoryStorageKey = "SearchHistory";
     private const string LastLanguageStorageKey = "LastLanguage";
     private string _language;
-    private string _moveName;
 
     [Inject]
     public ILocalStorageService LocalStorageService { get; set; }
@@ -26,20 +25,12 @@ public class MoveTranslatorBase : ComponentBase
     protected bool IsInitializing { get; private set; }
     protected Move Move { get; private set; }
     protected Dictionary<string, string> Languages { get; private set; }
-    protected List<string> MoveNameSuggestions { get; } = new();
+    protected Dictionary<string, string> MoveNameSuggestions { get; } = new();
     protected string MoveEnglishName => Move?.GetMoveName("en");
     protected bool IsButtonDisabled => IsInitializing || IsLoading || string.IsNullOrWhiteSpace(MoveName);
     protected ObservableCollection<NameByLanguage> SearchHistory { get; private set; }
 
-    protected string MoveName
-    {
-        get => _moveName;
-        set
-        {
-            _moveName = value;
-            MoveNameSuggestions.Clear();
-        }
-    }
+    protected string MoveName { get; set; }
 
     protected string Language
     {
@@ -80,8 +71,18 @@ public class MoveTranslatorBase : ComponentBase
     protected async Task LoadMove()
     {
         IsLoading = true;
-        Move = await PokeApi.GetMove(MoveName.Trim(), Language);
 
+        if (MoveNameSuggestions.ContainsValue(MoveName))
+        {
+            Move = await PokeApi.GetMove(MoveNameSuggestions.Single(k => k.Value == MoveName).Key, "en");
+        }
+        else
+        {
+            Move = await PokeApi.GetMove(MoveName.Trim(), Language);
+        }
+        
+        MoveNameSuggestions.Clear();
+        
         if (Move is null)
         {
             Move[] other = await PokeApi.SearchMoves(MoveName.Trim(), Language);
@@ -89,7 +90,6 @@ public class MoveTranslatorBase : ComponentBase
             if (other.Length == 1)
             {
                 Move = other[0];
-                MoveName = other[0].GetMoveName(Language);
             }
             else if (other.Length == 0)
             {
@@ -97,13 +97,17 @@ public class MoveTranslatorBase : ComponentBase
             }
             else
             {
-                MoveNameSuggestions.AddRange(other.Select(m => m.GetMoveName(Language)));
+                foreach (Move move in other)
+                {
+                    MoveNameSuggestions.Add(move.Name, move.GetMoveName(Language));
+                }
             }
         }
 
         if (Move is not null)
         {
-            NameByLanguage nameByLanguage = new(Move.GetMoveName(Language), Language);
+            MoveName = Move.GetMoveName(Language);
+            NameByLanguage nameByLanguage = new(MoveName, Language);
 
             if (!SearchHistory.Contains(nameByLanguage))
             {

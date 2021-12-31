@@ -11,10 +11,10 @@
                 {
                     <MudItem xs="12">
                         <MudText Typo="Typo.h6">Search History</MudText>
-                        <MudChipSet AllClosable="true" Class="py-4" Style="overflow-x: auto;white-space: nowrap">
+                        <MudChipSet AllClosable="true" Class="py-2" Style="overflow-x: auto;white-space: nowrap">
                             @foreach (NameByLanguage item in SearchHistory)
                             {
-                                <MudChip Text="@item.Name" OnClick="@(() => OnLastValueClick(item))" OnClose="@(() => SearchHistory.Remove(item))"/>
+                                <MudChip Text="@item.Name" OnClick="@(() => OnLastValueClick(item))" OnClose="@(() => SearchHistory.Remove(item))" Size="@Size.Small"/>
                             }
                         </MudChipSet>
                     </MudItem>
@@ -40,10 +40,10 @@
                 {
                     <MudItem xs="12">
                         <MudText Typo="Typo.h6">Did you mean:</MudText>
-                        <MudChipSet AllClosable="true" Class="py-4" Style="overflow-x: auto;white-space: nowrap">
-                            @foreach (string suggestion in MoveNameSuggestions)
+                        <MudChipSet Class="py-2" Style="overflow-x: auto;white-space: nowrap">
+                            @foreach (string suggestion in MoveNameSuggestions.Values)
                             {
-                                <MudChip Text="@suggestion" OnClick="@(async () => { MoveName = suggestion; await LoadMove();})"/>
+                                <MudChip Text="@suggestion" Variant="Variant.Outlined" OnClick="@(async () => { MoveName = suggestion; await LoadMove();})" Size="@Size.Small"/>
                             }
                         </MudChipSet>
                     </MudItem>
@@ -61,15 +61,33 @@
     }
     else if (Move != null)
     {
-        <MudDivider Class="my-8"/>
-        <MudPaper Elevation="0" Square="true">
-            <MudText Typo="Typo.h6">@MoveEnglishName</MudText>
-            <MudChip Label="true" Variant="Variant.Outlined" Size="Size.Small">@Move.Type.Name</MudChip>
+        <MudPaper Elevation="0" Square="true" Class="mt-4">
+            <MudGrid>
+                <MudItem xs="8">
+                    <MudText Typo="Typo.h6">@MoveEnglishName</MudText>
+                </MudItem>
+                <MudItem xs="4">
+                    <MudText Align="Align.Right">
+                        <MudChip Label="true" Variant="Variant.Outlined" Size="Size.Small">@Move.Type.Name</MudChip>
+                    </MudText>
+                </MudItem>
+            </MudGrid>
+            <MudDivider class="my-2"/>
+            <MudText Class="mb-1" Align="Align.Justify">
+                @Move.FlavorTextEntries.LastOrDefault(f => f.Language.Name == "en")?.FlavorText
+            </MudText>
+            <MudText Class="mb-1" Align="Align.Justify">
+                @Move.EffectEntries.LastOrDefault(f => f.Language.Name == "en")?.ShortEffect
+            </MudText>
+            <MudDivider class="my-2"/>
             <MudText>
-                @Move.FlavorTextEntries.FirstOrDefault(f => f.Language.Name == "en")?.FlavorText
+                <strong>Accuracy</strong> @(Move.Accuracy?.ToString() ?? "-/-")
             </MudText>
             <MudText>
-                @Move.EffectEntries.FirstOrDefault(f => f.Language.Name == "en")?.Effect
+                <strong>Power</strong> @(Move.Power?.ToString() ?? "-/-")
+            </MudText>
+            <MudText>
+                <strong>PP</strong> @Move.Pp
             </MudText>
         </MudPaper>
     }
