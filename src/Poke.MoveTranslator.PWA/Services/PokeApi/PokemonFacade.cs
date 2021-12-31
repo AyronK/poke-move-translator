@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json.Serialization;
 using GraphQL;
 using GraphQL.Client.Abstractions;
@@ -20,7 +21,7 @@ public class PokemonFacade : IPokemonApi, IDisposable
         MemoryCache = memoryCache;
     }
 
-    public async Task<Dictionary<string,string>> GetLanguages()
+    public async Task<Dictionary<string, string>> GetLanguages()
     {
         NamedApiResourceList<Language> languageCodes = await PokeApi.GetNamedResourcePageAsync<Language>();
         List<Language> languages = await PokeApi.GetResourceAsync(languageCodes.Results.Select(r => r));
@@ -36,13 +37,13 @@ public class PokemonFacade : IPokemonApi, IDisposable
 
     public async Task<Move> GetMove(string name, string language)
     {
-        if (language == "en")
+        if (language == "en" && await GetMoveByEnglishName(name) is { } moveByEnglishNameResult)
         {
-            return await GetMoveByEnglishName(name);
+            return moveByEnglishNameResult;
         }
 
         string cacheKey = $"{nameof(PokemonFacade)}.{nameof(GetMove)}.({name},({language})";
-        
+
         GraphQLResponse<PokemonMoveCollectionGraphQL> moveResult = await MemoryCache
             .GetOrCreateAsync(cacheKey, async (_) => await QueryMoveByNameAndLanguage(name, language, 1));
 
@@ -57,7 +58,7 @@ public class PokemonFacade : IPokemonApi, IDisposable
     public async Task<Move[]> SearchMoves(string searchByName, string language)
     {
         string cacheKey = $"{nameof(PokemonFacade)}.{nameof(SearchMoves)}.({searchByName},({language})";
-        
+
         GraphQLResponse<PokemonMoveCollectionGraphQL> moveResult = await MemoryCache
             .GetOrCreateAsync(cacheKey, async (_) => await QueryMoveByNameAndLanguage(searchByName + "%", language, 3));
 
@@ -73,7 +74,7 @@ query getMoveByNameAndLanguage($name: String, $language: String, $limit: Int) {
     id
   }
 }";
-        
+
         GraphQLRequest moveRequest = new()
         {
             Query = query,
@@ -86,8 +87,15 @@ query getMoveByNameAndLanguage($name: String, $language: String, $limit: Int) {
 
     private async Task<Move> GetMoveByEnglishName(string englishName)
     {
-        Move result = await PokeApi.GetResourceAsync<Move>(englishName);
-        return result;
+        try
+        {
+            Move result = await PokeApi.GetResourceAsync<Move>(englishName);
+            return result;
+        }
+        catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.NotFound)
+        {
+            return null;
+        }
     }
 
     private async Task<Move> GetMove(int id)
@@ -95,7 +103,7 @@ query getMoveByNameAndLanguage($name: String, $language: String, $limit: Int) {
         Move result = await PokeApi.GetResourceAsync<Move>(id);
         return result;
     }
-    
+
     private class PokemonMoveCollectionGraphQL
     {
         [JsonPropertyName("move")]

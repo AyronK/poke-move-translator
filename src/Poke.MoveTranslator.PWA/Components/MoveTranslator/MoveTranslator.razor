@@ -75,7 +75,7 @@
                 </MudItem>
             }
             <MudItem xs="4">
-                <MudSelect T="string" @bind-Value="Language" Label="Language" AnchorOrigin="Origin.BottomCenter" Disabled="@IsLoading">
+                <MudSelect  T="string" @bind-Value="Language" Label="Language" AnchorOrigin="Origin.BottomCenter" Disabled="@IsLoading">
                     @foreach (string languageCode in Languages.Keys)
                     {
                         <MudSelectItem Value="@languageCode">@(Languages[languageCode])</MudSelectItem>
@@ -83,12 +83,12 @@
                 </MudSelect>
             </MudItem>
             <MudItem xs="5">
-                <ErrorBoundary>
-                    <MudTextField @bind-Value="MoveName" Label="Move name" Variant="Variant.Text" Disabled="@IsLoading" AutoFocus="true" OnKeyPress="@(ErrorHandler.Bind(async (KeyboardEventArgs k) => { if (k.Key == "Enter"){await LoadMove();}}))"/>
-                </ErrorBoundary>
+                <MudTextField @bind-Value="MoveName" Label="Move name" Variant="Variant.Text" Disabled="@IsLoading" AutoFocus="true"  
+                              Immediate="true"
+                                  OnKeyDown="@(ErrorHandler.Bind(async (KeyboardEventArgs k) => { if (k.Key == "Enter"){await LoadMove();}}))"/>
             </MudItem>
             <MudItem xs="3">
-                <MudFab Color="Color.Primary" Icon="@Icons.Material.Filled.PlayCircleFilled" aria-label="play" OnClick="@ErrorHandler.Bind(LoadMove)" Class="ml-auto d-flex d-sm-inline-flex" Disabled="IsButtonDisabled"/>
+                <MudFab Color="Color.Primary" Icon="@Icons.Material.Filled.PlayCircleFilled" aria-label="play" OnClick="@ErrorHandler.Bind(LoadMove)" Class="ml-auto d-flex d-sm-inline-flex" Disabled="IsMoveLoadDisabled"/>
             </MudItem>
         </MudGrid>
     }

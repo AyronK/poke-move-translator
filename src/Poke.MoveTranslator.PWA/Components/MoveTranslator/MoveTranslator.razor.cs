@@ -24,14 +24,14 @@ public class MoveTranslatorBase : ComponentBase
     
     [CascadingParameter]
     public ErrorHandler ErrorHandler { get; set; }
-
+    
     protected bool IsLoading { get; private set; }
     protected bool IsInitializing { get; private set; }
     protected Move Move { get; private set; }
     protected Dictionary<string, string> Languages { get; private set; }
     protected Dictionary<string, string> MoveNameSuggestions { get; } = new();
     protected string MoveEnglishName => Move?.GetMoveName("en");
-    protected bool IsButtonDisabled => IsInitializing || IsLoading || string.IsNullOrWhiteSpace(MoveName);
+    protected bool IsMoveLoadDisabled => IsInitializing || IsLoading || string.IsNullOrWhiteSpace(MoveName);
     protected ObservableCollection<NameByLanguage> SearchHistory { get; private set; }
 
     protected string MoveName { get; set; }
@@ -55,6 +55,12 @@ public class MoveTranslatorBase : ComponentBase
         }
     }
 
+    public MoveTranslatorBase()
+    {
+        _language = "en";
+        MoveName = string.Empty;
+    }
+
     protected override async Task OnInitializedAsync()
     {
         IsInitializing = true;
@@ -74,6 +80,11 @@ public class MoveTranslatorBase : ComponentBase
 
     protected async Task LoadMove()
     {
+        if (IsMoveLoadDisabled)
+        {
+            return;
+        }
+        
         IsLoading = true;
 
         if (MoveNameSuggestions.ContainsValue(MoveName))
