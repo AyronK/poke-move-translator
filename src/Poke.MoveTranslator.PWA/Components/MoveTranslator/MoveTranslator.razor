@@ -83,7 +83,7 @@
                 </MudSelect>
             </MudItem>
             <MudItem xs="5">
-                <MudTextField @bind-Value="MoveName" Label="Move name" Variant="Variant.Text" Disabled="@IsLoading" AutoFocus="true"/>
+                <MudTextField @bind-Value="MoveName" Label="Move name" Variant="Variant.Text" Disabled="@IsLoading" AutoFocus="true" OnKeyPress="@(async (k) => { if (k.Key == "Enter"){await LoadMove();}})"/>
             </MudItem>
             <MudItem xs="3">
                 <MudFab Color="Color.Primary" Icon="@Icons.Material.Filled.PlayCircleFilled" aria-label="play" OnClick="@LoadMove" Class="ml-auto d-flex d-sm-inline-flex" Disabled="IsButtonDisabled"/>
