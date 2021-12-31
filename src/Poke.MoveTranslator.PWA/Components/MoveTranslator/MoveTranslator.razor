@@ -1,8 +1,8 @@
 @namespace Poke.MoveTranslator.PWA.Components
 @using Newtonsoft.Json
 @inherits MoveTranslatorBase
-<div class="move-translator">
-    <div  class="move-translator-content">
+<div class="move-translator" style="@(Move is null ? "height:auto" : "")">
+    <div class="move-translator-content">
         <MudPaper Class="d-flex flex-column" Elevation="0" Square="true">
 
             @if (IsLoading || IsInitializing)
