@@ -26,4 +26,7 @@ public class PokemonApiLocalStorageCache : IPokemonApi
     {
         return LocalStorage.GetOrCreateAsync(LocalStorageKeyPrefix + "/" + language + "/move/" + name.ToLowerInvariant(), () => ApiService.GetMove(name, language));
     }
+
+    public Task<Move[]> SearchMoves(string searchByName, string language) 
+        => ApiService.SearchMoves(searchByName, language); // do not store search in local storage
 }
