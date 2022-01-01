@@ -107,7 +107,7 @@
                     </MudItem>
                     <MudItem xs="5">
                         <MudTextField @bind-Value="MoveName" Label="Move name" Variant="Variant.Text" Disabled="@IsLoading" AutoFocus="true"
-                                      Immediate="true"
+                                      Immediate="true" Clearable="true"
                                       OnKeyDown="@(ErrorHandler.Bind(async (KeyboardEventArgs k) => { if (k.Key == "Enter"){await LoadMove();}}))"/>
                     </MudItem>
                     <MudItem xs="3">
