@@ -30,13 +30,11 @@ public class MoveTranslatorBase : ComponentBase
     protected bool IsInitializing { get; private set; }
     protected Move Move { get; private set; }
     protected Dictionary<string, string> Languages { get; private set; }
-    protected Dictionary<string, string> MoveNameSuggestions { get; } = new();
+    protected Dictionary<string, string> SearchSuggestions { get; } = new();
     protected string MoveEnglishName => Move?.GetMoveName(PokeConst.EnglishLanguage);
     protected bool IsMoveLoadDisabled => IsInitializing || IsLoading || string.IsNullOrWhiteSpace(MoveName);
     protected ObservableCollection<NameByLanguage> SearchHistory { get; private set; }
-
     protected string MoveName { get; set; }
-
     protected string Language
     {
         get => _language;
@@ -88,16 +86,16 @@ public class MoveTranslatorBase : ComponentBase
 
         IsLoading = true;
 
-        if (MoveNameSuggestions.ContainsValue(MoveName))
+        if (SearchSuggestions.ContainsValue(MoveName))
         {
-            Move = await PokeApi.GetMove(MoveNameSuggestions.Single(k => k.Value == MoveName).Key, PokeConst.EnglishLanguage);
+            Move = await PokeApi.GetMove(SearchSuggestions.Single(k => k.Value == MoveName).Key, PokeConst.EnglishLanguage);
         }
         else
         {
             Move = await PokeApi.GetMove(MoveName.Trim(), Language);
         }
 
-        MoveNameSuggestions.Clear();
+        SearchSuggestions.Clear();
 
         if (Move is null)
         {
@@ -115,7 +113,7 @@ public class MoveTranslatorBase : ComponentBase
             {
                 foreach (Move move in other)
                 {
-                    MoveNameSuggestions.Add(move.Name, move.GetMoveName(Language));
+                    SearchSuggestions.Add(move.Name, move.GetMoveName(Language));
                 }
             }
         }
@@ -139,12 +137,12 @@ public class MoveTranslatorBase : ComponentBase
         IsLoading = false;
     }
 
-    protected async Task OnLastValueClick(NameByLanguage nameByLanguage)
+    protected async Task LoadItemFromHistory(NameByLanguage nameByLanguage)
     {
         MoveName = nameByLanguage.Name;
         Language = nameByLanguage.Language;
         await LoadMove();
     }
-
-    protected record NameByLanguage(string Name, string Language);
 }
+
+public record NameByLanguage(string Name, string Language);
