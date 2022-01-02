@@ -14,12 +14,12 @@
                         Languages="@Languages"
                         SearchHistory="@SearchHistory"
                         SearchSuggestions="@SearchSuggestions"
-                        IsLoading="@IsLoading"
+                        Disabled="@IsLoading"
                         SearchDisabled="@IsMoveLoadDisabled"
-                        OnSuggestionSelect="@(async (suggestion) => await ErrorHandler.Bind(async () => { MoveName = suggestion; await LoadMove();})())"
+                        OnSuggestionValueSelect="@(async (suggestion) => { MoveName = suggestion; await LoadMove();})"
                         OnSearchHistoryValueRemove="@(item => SearchHistory.Remove(item))"
-                        OnSearchHistoryValueSelect="@(LoadItemFromHistory)"
-                        OnSearch="@ErrorHandler.Bind(LoadMove)"
+                        OnSearchHistoryValueSelect="@LoadItemFromHistory"
+                        OnSearch="@LoadMove"
                         OnSuggestionsClear="@(() => SearchSuggestions.Clear())"
                         OnHistoryClear="@(() => SearchHistory.Clear())"/>
                 }
@@ -78,12 +78,12 @@
                         Languages="@Languages"
                         SearchHistory="@SearchHistory"
                         SearchSuggestions="@SearchSuggestions"
-                        IsLoading="@IsLoading"
+                        Disabled="@IsLoading"
                         SearchDisabled="@IsMoveLoadDisabled"
-                        OnSuggestionSelect="@(async (suggestion) => await ErrorHandler.Bind(async () => { MoveName = suggestion; await LoadMove();})())"
+                        OnSuggestionValueSelect="@(async (suggestion) => { MoveName = suggestion; await LoadMove();})"
                         OnSearchHistoryValueRemove="@(item => SearchHistory.Remove(item))"
-                        OnSearchHistoryValueSelect="@(LoadItemFromHistory)"
-                        OnSearch="@ErrorHandler.Bind(LoadMove)"
+                        OnSearchHistoryValueSelect="@LoadItemFromHistory"
+                        OnSearch="@LoadMove"
                         OnSuggestionsClear="@(() => SearchSuggestions.Clear())"
                         OnHistoryClear="@(() => SearchHistory.Clear())"/>
                 }
@@ -91,13 +91,3 @@
         </footer>
     </MudHidden>
 </div>
-
-@code {
-    RenderFragment<object> DisplayChatMessage = message => __builder =>
-    {
-        <div class="chat-message">
-            <span class="author">@message</span>
-            <span class="text">@message</span>
-        </div>
-    };
-}

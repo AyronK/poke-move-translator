@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using Poke.MoveTranslator.PWA.Const;
 using Poke.MoveTranslator.PWA.Extensions;
+using Poke.MoveTranslator.PWA.Models.Common;
 using Poke.MoveTranslator.PWA.Services;
 using Poke.MoveTranslator.PWA.Shared;
 using PokeApiNet;
@@ -15,7 +16,7 @@ public class MoveTranslatorBase : ComponentBase
     private const string SearchHistoryStorageKey = "SearchHistory";
     private const string LastLanguageStorageKey = "LastLanguage";
     
-    private string _language;
+    private string _language = PokeConst.EnglishLanguage;
 
     [Inject]
     public ILocalStorageService LocalStorageService { get; set; }
@@ -26,15 +27,17 @@ public class MoveTranslatorBase : ComponentBase
     [CascadingParameter]
     public ErrorHandler ErrorHandler { get; set; }
 
+    protected string MoveEnglishName => Move?.GetMoveName(PokeConst.EnglishLanguage);
+    protected bool IsMoveLoadDisabled => IsInitializing || IsLoading || string.IsNullOrWhiteSpace(MoveName);
+    
     protected bool IsLoading { get; private set; }
     protected bool IsInitializing { get; private set; }
     protected Move Move { get; private set; }
     protected Dictionary<string, string> Languages { get; private set; }
     protected Dictionary<string, string> SearchSuggestions { get; } = new();
-    protected string MoveEnglishName => Move?.GetMoveName(PokeConst.EnglishLanguage);
-    protected bool IsMoveLoadDisabled => IsInitializing || IsLoading || string.IsNullOrWhiteSpace(MoveName);
-    protected ObservableCollection<NameByLanguage> SearchHistory { get; private set; }
-    protected string MoveName { get; set; }
+    protected ObservableCollection<NameByLanguage> SearchHistory { get; private set; } = new();
+    protected string MoveName { get; set; } = string.Empty;
+    
     protected string Language
     {
         get => _language;
@@ -54,26 +57,28 @@ public class MoveTranslatorBase : ComponentBase
         }
     }
 
-    public MoveTranslatorBase()
-    {
-        _language = PokeConst.EnglishLanguage;
-        MoveName = string.Empty;
-    }
-
     protected override async Task OnInitializedAsync()
     {
-        IsInitializing = true;
-        Languages = await PokeApi.GetLanguages();
-        Language = await LocalStorageService.GetItemAsync<string>(LastLanguageStorageKey) ?? PokeConst.EnglishLanguage;
-        NameByLanguage[] searchHistoryFromLocalStorage = await LocalStorageService.GetItemAsync<NameByLanguage[]>(SearchHistoryStorageKey) ?? Array.Empty<NameByLanguage>();
-
-        if (searchHistoryFromLocalStorage.Length > 3)
+        async Task InitializeSearchHistory()
         {
-            searchHistoryFromLocalStorage = searchHistoryFromLocalStorage.TakeLast(3).ToArray();
+            NameByLanguage[] searchHistoryFromLocalStorage = await LocalStorageService.GetItemAsync<NameByLanguage[]>(SearchHistoryStorageKey) ?? Array.Empty<NameByLanguage>();
+
+            if (searchHistoryFromLocalStorage.Length > 3)
+            {
+                searchHistoryFromLocalStorage = searchHistoryFromLocalStorage.TakeLast(3).ToArray();
+            }
+
+            SearchHistory = new ObservableCollection<NameByLanguage>(searchHistoryFromLocalStorage);
+            SearchHistory.CollectionChanged += async (_, a) => { await LocalStorageService.SetItemAsync(SearchHistoryStorageKey, SearchHistory.ToArray()); };
         }
         
-        SearchHistory = new ObservableCollection<NameByLanguage>(searchHistoryFromLocalStorage);
-        SearchHistory.CollectionChanged += async (_, a) => { await LocalStorageService.SetItemAsync(SearchHistoryStorageKey, SearchHistory.ToArray()); };
+        IsInitializing = true;
+        
+        Languages = await PokeApi.GetLanguages();
+        Language = await LocalStorageService.GetItemAsync<string>(LastLanguageStorageKey) ?? PokeConst.EnglishLanguage;
+        
+        await InitializeSearchHistory();
+
         IsInitializing = false;
     }
 
@@ -107,7 +112,7 @@ public class MoveTranslatorBase : ComponentBase
             }
             else if (other.Length == 0)
             {
-                Console.WriteLine("Not found");
+                Console.WriteLine("Not found"); // TODO handle such case
             }
             else
             {
@@ -144,5 +149,3 @@ public class MoveTranslatorBase : ComponentBase
         await LoadMove();
     }
 }
-
-public record NameByLanguage(string Name, string Language);

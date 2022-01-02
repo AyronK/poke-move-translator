@@ -10,18 +10,18 @@
                 aria-label="delete"
                 Icon="@Icons.Material.Filled.Close"
                 Size="Size.Small"
-                OnClick="@(ErrorHandler.Bind(async () => await OnClear.InvokeAsync()))"/>
+                OnClick="@(ErrorHandler.Bind(async () => await OnSuggestionsClear.InvokeAsync()))"/>
         </MudText>
     </MudItem>
 </MudGrid>
 <MudChipSet AllClosable="false" Class="py-1" Style="overflow-x: auto;white-space: nowrap">
-    @foreach (string suggestion in MoveNameSuggestions.Values)
+    @foreach (string suggestion in SearchSuggestions.Values)
     {
         <MudChip
             Text="@suggestion"
             Variant="Variant.Outlined"
             Size="@Size.Small"
-            OnClick="@(ErrorHandler.Bind(async () => { await OnSuggestionSelect.InvokeAsync(suggestion); }))"/>
+            OnClick="@(ErrorHandler.Bind(async () => { await OnSuggestionValueSelect.InvokeAsync(suggestion); }))"/>
     }
 </MudChipSet>
 
@@ -31,12 +31,12 @@
     public ErrorHandler ErrorHandler { get; set; }
 
     [Parameter]
-    public EventCallback<string> OnSuggestionSelect { get; set; }
+    public Dictionary<string, string> SearchSuggestions { get; set; }
 
     [Parameter]
-    public EventCallback OnClear { get; set; }
+    public EventCallback<string> OnSuggestionValueSelect { get; set; }
 
     [Parameter]
-    public Dictionary<string, string> MoveNameSuggestions { get; set; }
+    public EventCallback OnSuggestionsClear { get; set; }
 
 }

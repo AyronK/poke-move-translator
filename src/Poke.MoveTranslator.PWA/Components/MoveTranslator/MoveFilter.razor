@@ -1,25 +1,26 @@
+@using Poke.MoveTranslator.PWA.Models.Common
 @namespace Poke.MoveTranslator.PWA.Components
 
 <MudGrid Justify="@Justify.Center">
     <MudItem xs="12" Class="pb-0">
         @if (SearchSuggestions.Count > 0)
         {
-            <SuggestionsBar
-                MoveNameSuggestions="@SearchSuggestions"
-                OnSuggestionSelect="@OnSuggestionSelect"
-                OnClear="@(() => SearchSuggestions.Clear())"/>
+            <SearchSuggestionsBar
+                SearchSuggestions="@SearchSuggestions"
+                OnSuggestionValueSelect="@OnSuggestionValueSelect"
+                OnSuggestionsClear="@(() => SearchSuggestions.Clear())"/>
         }
         else if (SearchHistory.Any())
         {
-            <HistoryBar
+            <SearchHistoryBar
                 SearchHistory="@SearchHistory"
-                OnHistoryClear="@OnHistoryClear"
-                OnValueRemove="@OnSearchHistoryValueRemove"
-                OnValueSelect="@OnSearchHistoryValueSelect"/>
+                OnSearchHistoryClear="@OnHistoryClear"
+                OnSearchHistoryValueRemove="@OnSearchHistoryValueRemove"
+                OnSearchHistoryValueSelect="@OnSearchHistoryValueSelect"/>
         }
     </MudItem>
     <MudItem xs="4">
-        <MudSelect T="string" @bind-Value="@LanguageValue" Label="Language" AnchorOrigin="Origin.BottomCenter" Disabled="@IsLoading">
+        <MudSelect T="string" @bind-Value="@LanguageValue" Label="Language" AnchorOrigin="Origin.BottomCenter" Disabled="@Disabled">
             @foreach (string languageCode in Languages.Keys)
             {
                 <MudSelectItem Value="@languageCode">@(Languages[languageCode])</MudSelectItem>
@@ -27,8 +28,7 @@
         </MudSelect>
     </MudItem>
     <MudItem xs="5">
-        <MudTextField @bind-Value="@MoveNameValue" Label="Move name" Variant="Variant.Text" Disabled="@IsLoading" AutoFocus="true"
-                      Immediate="true" Clearable="true"
+        <MudTextField @bind-Value="@MoveNameValue" Label="Move name" Variant="Variant.Text" Disabled="@Disabled" AutoFocus="true" Immediate="true" Clearable="true"
                       OnKeyDown="@(ErrorHandler.Bind(async (KeyboardEventArgs k) => { if (k.Key == "Enter"){await OnSearch.InvokeAsync();}}))"/>
     </MudItem>
     <MudItem xs="3">
@@ -38,12 +38,11 @@
 
 @code {
 
-    [CascadingParameter]
-    public ErrorHandler ErrorHandler { get; set; }
-    
-
-    [Parameter]
-    public string MoveName { get; set; }
+    private string LanguageValue
+    {
+        get => Language ?? string.Empty;
+        set => LanguageChanged.InvokeAsync(value);
+    }
 
     private string MoveNameValue
     {
@@ -51,34 +50,33 @@
         set => MoveNameChanged.InvokeAsync(value);
     }
 
+    [CascadingParameter]
+    public ErrorHandler ErrorHandler { get; set; }
+
+    [Parameter]
+    public string MoveName { get; set; }
+
     [Parameter]
     public EventCallback<string> MoveNameChanged { get; set; }
-    
+
     [Parameter]
     public string Language { get; set; }
-    
-    private string LanguageValue
-    {
-        get => Language ?? string.Empty;
-        set => LanguageChanged.InvokeAsync(value);
-    }
 
     [Parameter]
     public EventCallback<string> LanguageChanged { get; set; }
 
-
     [Parameter]
     public EventCallback OnSearch { get; set; }
-    
+
     [Parameter]
-    public bool IsLoading { get; set; }
+    public bool Disabled { get; set; }
+
     [Parameter]
     public bool SearchDisabled { get; set; }
-    
+
     [Parameter]
     public Dictionary<string, string> Languages { get; set; }
-    
-    
+
     [Parameter]
     public EventCallback<NameByLanguage> OnSearchHistoryValueSelect { get; set; }
 
@@ -92,7 +90,7 @@
     public IEnumerable<NameByLanguage> SearchHistory { get; set; }
 
     [Parameter]
-    public EventCallback<string> OnSuggestionSelect { get; set; }
+    public EventCallback<string> OnSuggestionValueSelect { get; set; }
 
     [Parameter]
     public EventCallback OnSuggestionsClear { get; set; }
