@@ -15,9 +15,9 @@
 		<PackageReference Include="Blazored.LocalStorage" Version="4.1.5" />
 		<PackageReference Include="GraphQL.Client" Version="4.0.2" />
 		<PackageReference Include="GraphQL.Client.Serializer.SystemTextJson" Version="4.0.2" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.0" PrivateAssets="all" />
-		<PackageReference Include="MudBlazor" Version="6.0.2" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.1" PrivateAssets="all" />
+		<PackageReference Include="MudBlazor" Version="6.0.3" />
 		<PackageReference Include="PokeApiNet" Version="3.0.3" />
 	</ItemGroup>
 
