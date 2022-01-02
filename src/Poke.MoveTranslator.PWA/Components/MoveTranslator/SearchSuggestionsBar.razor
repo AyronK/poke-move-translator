@@ -1,0 +1,42 @@
+@namespace Poke.MoveTranslator.PWA.Components
+
+<MudGrid Class="p-0">
+    <MudItem xs="8" Class="p-0">
+        <MudText Typo="Typo.subtitle2">Did you mean?</MudText>
+    </MudItem>
+    <MudItem xs="4" Class="p-0">
+        <MudText Align="Align.End">
+            <MudIconButton
+                aria-label="delete"
+                Icon="@Icons.Material.Filled.Close"
+                Size="Size.Small"
+                OnClick="@(ErrorHandler.Bind(async () => await OnSuggestionsClear.InvokeAsync()))"/>
+        </MudText>
+    </MudItem>
+</MudGrid>
+<MudChipSet AllClosable="false" Class="py-1" Style="overflow-x: auto;white-space: nowrap">
+    @foreach (string suggestion in SearchSuggestions.Values)
+    {
+        <MudChip
+            Text="@suggestion"
+            Variant="Variant.Outlined"
+            Size="@Size.Small"
+            OnClick="@(ErrorHandler.Bind(async () => { await OnSuggestionValueSelect.InvokeAsync(suggestion); }))"/>
+    }
+</MudChipSet>
+
+@code {
+
+    [CascadingParameter]
+    public ErrorHandler ErrorHandler { get; set; }
+
+    [Parameter]
+    public Dictionary<string, string> SearchSuggestions { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnSuggestionValueSelect { get; set; }
+
+    [Parameter]
+    public EventCallback OnSuggestionsClear { get; set; }
+
+}

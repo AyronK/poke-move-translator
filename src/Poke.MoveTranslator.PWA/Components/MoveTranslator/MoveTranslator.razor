@@ -1,64 +1,93 @@
 @namespace Poke.MoveTranslator.PWA.Components
-@using Newtonsoft.Json
+@using Poke.MoveTranslator.PWA.Const
 @inherits MoveTranslatorBase
 
-<MudPaper Class="d-flex flex-column" Elevation="0" Square="true">
-    @if (!IsInitializing)
-    {
-        <MudPaper Elevation="0" Square="true">
-            <MudGrid Justify="@Justify.Center">
-                @if (LastValues.Count > 0)
+<div class="move-translator" style="@(Move is null ? "height:auto" : "")">
+    <div class="move-translator-content">
+        <MudPaper Class="d-flex flex-column" Elevation="0" Square="true">
+            <MudHidden Breakpoint="Breakpoint.MdAndDown">
+                @if (!IsInitializing)
                 {
-                    <MudItem xs="12">
-                        <MudText Typo="Typo.h6">Last moves</MudText>
-                        <MudChipSet AllClosable="true" Class="py-4" Style="overflow-x: auto;white-space: nowrap">
-                            @foreach (NameByLanguage item in LastValues)
-                            {
-                                <MudChip Text="@item.Name" OnClick="@(() => OnLastValueClick(item))" OnClose="@(() => LastValues.Remove(item))"/>
-                            }
-                        </MudChipSet>
-                    </MudItem>
+                    <MoveFilter
+                        @bind-Language="@Language"
+                        @bind-MoveName="@MoveName"
+                        Languages="@Languages"
+                        SearchHistory="@SearchHistory"
+                        SearchSuggestions="@SearchSuggestions"
+                        Disabled="@IsLoading"
+                        SearchDisabled="@IsMoveLoadDisabled"
+                        OnSuggestionValueSelect="@(async (suggestion) => { MoveName = suggestion; await LoadMove();})"
+                        OnSearchHistoryValueRemove="@(item => SearchHistory.Remove(item))"
+                        OnSearchHistoryValueSelect="@LoadItemFromHistory"
+                        OnSearch="@LoadMove"
+                        OnSuggestionsClear="@(() => SearchSuggestions.Clear())"
+                        OnHistoryClear="@(() => SearchHistory.Clear())"/>
                 }
-                <MudItem xs="12">
-                    <MudText Typo="Typo.h6">Search</MudText>
-                </MudItem>
-                <MudItem xs="8" sm="8" md="6">
-                    <MudTextField @bind-Value="MoveName" Label="Move name" Variant="Variant.Text" Disabled="@IsLoading"></MudTextField>
-                </MudItem>
-                <MudItem xs="4" sm="4" md="2">
-                    <MudSelect T="string" @bind-Value="Language" Label="Language" AnchorOrigin="Origin.BottomCenter" Disabled="@IsLoading">
-                        @foreach (string languageCode in languages.Keys)
-                        {
-                            <MudSelectItem Value="@languageCode">@(languages[languageCode])</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="12" sm="6" md="4">
-                    <MudFab Color="Color.Primary" Icon="@Icons.Material.Filled.PlayCircleFilled" aria-label="play" OnClick="@LoadMove" Class="ml-auto d-flex d-sm-inline-flex" Disabled="IsButtonDisabled"/>
-                </MudItem>
-            </MudGrid>
+            </MudHidden>
+
+            @if (IsLoading || IsInitializing)
+            {
+                <MudPaper Elevation="0" Square="true">
+                    <MudText Align="Align.Center">
+                        <MudProgressCircular Color="Color.Default" Indeterminate="true"/>
+                    </MudText>
+                </MudPaper>
+            }
+            else if (Move != null)
+            {
+                <MudPaper Elevation="0" Square="true" Class="mt-4">
+                    <MudGrid>
+                        <MudItem xs="8">
+                            <MudText Typo="Typo.h6">@MoveEnglishName</MudText>
+                        </MudItem>
+                        <MudItem xs="4">
+                            <MudText Align="Align.Right">
+                                <MudChip Label="true" Variant="Variant.Outlined" Size="Size.Small">@Move.Type.Name</MudChip>
+                            </MudText>
+                        </MudItem>
+                    </MudGrid>
+                    <MudDivider class="my-2"/>
+                    <MudText Class="mb-1" Align="Align.Justify">
+                        @Move.FlavorTextEntries.LastOrDefault(f => f.Language.Name == PokeConst.EnglishLanguage)?.FlavorText
+                    </MudText>
+                    <MudText Class="mb-1" Align="Align.Justify">
+                        @Move.EffectEntries.LastOrDefault(f => f.Language.Name == PokeConst.EnglishLanguage)?.ShortEffect
+                    </MudText>
+                    <MudDivider class="my-2"/>
+                    <MudText>
+                        <strong>Accuracy</strong> @(Move.Accuracy?.ToString() ?? "-/-")
+                    </MudText>
+                    <MudText>
+                        <strong>Power</strong> @(Move.Power?.ToString() ?? "-/-")
+                    </MudText>
+                    <MudText>
+                        <strong>PP</strong> @Move.Pp
+                    </MudText>
+                </MudPaper>
+            }
         </MudPaper>
-    }
-    @if (IsLoading || IsInitializing)
-    {
-        <MudPaper Elevation="0" Square="true">
-            <MudText Align="Align.Center">
-                <MudProgressCircular Color="Color.Default" Indeterminate="true"/>
-            </MudText>
-        </MudPaper>
-    }
-    else if (Move != null)
-    {
-        <MudDivider Class="my-8"/>
-        <MudPaper Elevation="0" Square="true">
-            <MudText Typo="Typo.h6">@MoveEnglishName</MudText>
-            <MudChip Label="true" Variant="Variant.Outlined" Size="Size.Small">@Move.Type.Name</MudChip>
-            <MudText>
-                @Move.FlavorTextEntries.FirstOrDefault(f => f.Language.Name == "en")?.FlavorText
-            </MudText>
-            <MudText>
-                @Move.EffectEntries.FirstOrDefault(f => f.Language.Name == "en")?.Effect
-            </MudText>
-        </MudPaper>
-    }
-</MudPaper>
+    </div>
+    <MudHidden Breakpoint="Breakpoint.LgAndUp">
+        <footer class="move-translator-footer">
+            <MudPaper Elevation="8" Square="true" Class="pa-4" Style="position: fixed;bottom:0;left: 0;right: 0">
+                @if (!IsInitializing)
+                {
+                    <MoveFilter
+                        @bind-Language="@Language"
+                        @bind-MoveName="@MoveName"
+                        Languages="@Languages"
+                        SearchHistory="@SearchHistory"
+                        SearchSuggestions="@SearchSuggestions"
+                        Disabled="@IsLoading"
+                        SearchDisabled="@IsMoveLoadDisabled"
+                        OnSuggestionValueSelect="@(async (suggestion) => { MoveName = suggestion; await LoadMove();})"
+                        OnSearchHistoryValueRemove="@(item => SearchHistory.Remove(item))"
+                        OnSearchHistoryValueSelect="@LoadItemFromHistory"
+                        OnSearch="@LoadMove"
+                        OnSuggestionsClear="@(() => SearchSuggestions.Clear())"
+                        OnHistoryClear="@(() => SearchHistory.Clear())"/>
+                }
+            </MudPaper>
+        </footer>
+    </MudHidden>
+</div>

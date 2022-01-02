@@ -1,0 +1,101 @@
+@using Poke.MoveTranslator.PWA.Models.Common
+@namespace Poke.MoveTranslator.PWA.Components
+
+<MudGrid Justify="@Justify.Center">
+    <MudItem xs="12" Class="pb-0">
+        @if (SearchSuggestions.Count > 0)
+        {
+            <SearchSuggestionsBar
+                SearchSuggestions="@SearchSuggestions"
+                OnSuggestionValueSelect="@OnSuggestionValueSelect"
+                OnSuggestionsClear="@(() => SearchSuggestions.Clear())"/>
+        }
+        else if (SearchHistory.Any())
+        {
+            <SearchHistoryBar
+                SearchHistory="@SearchHistory"
+                OnSearchHistoryClear="@OnHistoryClear"
+                OnSearchHistoryValueRemove="@OnSearchHistoryValueRemove"
+                OnSearchHistoryValueSelect="@OnSearchHistoryValueSelect"/>
+        }
+    </MudItem>
+    <MudItem xs="4">
+        <MudSelect T="string" @bind-Value="@LanguageValue" Label="Language" AnchorOrigin="Origin.BottomCenter" Disabled="@Disabled">
+            @foreach (string languageCode in Languages.Keys)
+            {
+                <MudSelectItem Value="@languageCode">@(Languages[languageCode])</MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="5">
+        <MudTextField @bind-Value="@MoveNameValue" Label="Move name" Variant="Variant.Text" Disabled="@Disabled" AutoFocus="true" Immediate="true" Clearable="true"
+                      OnKeyDown="@(ErrorHandler.Bind(async (KeyboardEventArgs k) => { if (k.Key == "Enter"){await OnSearch.InvokeAsync();}}))"/>
+    </MudItem>
+    <MudItem xs="3">
+        <MudFab Color="Color.Primary" Icon="@Icons.Material.Filled.PlayCircleFilled" aria-label="play" OnClick="@ErrorHandler.Bind(OnSearch.InvokeAsync)" Class="ml-auto d-flex d-sm-inline-flex" Disabled="SearchDisabled"/>
+    </MudItem>
+</MudGrid>
+
+@code {
+
+    private string LanguageValue
+    {
+        get => Language ?? string.Empty;
+        set => LanguageChanged.InvokeAsync(value);
+    }
+
+    private string MoveNameValue
+    {
+        get => MoveName ?? string.Empty;
+        set => MoveNameChanged.InvokeAsync(value);
+    }
+
+    [CascadingParameter]
+    public ErrorHandler ErrorHandler { get; set; }
+
+    [Parameter]
+    public string MoveName { get; set; }
+
+    [Parameter]
+    public EventCallback<string> MoveNameChanged { get; set; }
+
+    [Parameter]
+    public string Language { get; set; }
+
+    [Parameter]
+    public EventCallback<string> LanguageChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnSearch { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    [Parameter]
+    public bool SearchDisabled { get; set; }
+
+    [Parameter]
+    public Dictionary<string, string> Languages { get; set; }
+
+    [Parameter]
+    public EventCallback<NameByLanguage> OnSearchHistoryValueSelect { get; set; }
+
+    [Parameter]
+    public EventCallback OnHistoryClear { get; set; }
+
+    [Parameter]
+    public EventCallback<NameByLanguage> OnSearchHistoryValueRemove { get; set; }
+
+    [Parameter]
+    public IEnumerable<NameByLanguage> SearchHistory { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnSuggestionValueSelect { get; set; }
+
+    [Parameter]
+    public EventCallback OnSuggestionsClear { get; set; }
+
+    [Parameter]
+    public Dictionary<string, string> SearchSuggestions { get; set; }
+
+}

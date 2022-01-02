@@ -1,91 +1,151 @@
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
+using MudBlazor;
+using Poke.MoveTranslator.PWA.Const;
+using Poke.MoveTranslator.PWA.Extensions;
+using Poke.MoveTranslator.PWA.Models.Common;
 using Poke.MoveTranslator.PWA.Services;
+using Poke.MoveTranslator.PWA.Shared;
 using PokeApiNet;
 
 namespace Poke.MoveTranslator.PWA.Components;
 
 public class MoveTranslatorBase : ComponentBase
 {
-    protected Dictionary<string, string> languages;
+    private const string SearchHistoryStorageKey = "SearchHistory";
+    private const string LastLanguageStorageKey = "LastLanguage";
+    
+    private string _language = PokeConst.EnglishLanguage;
+
     [Inject]
     public ILocalStorageService LocalStorageService { get; set; }
-    
+
     [Inject]
     public IPokemonApi PokeApi { get; set; }
+
+    [CascadingParameter]
+    public ErrorHandler ErrorHandler { get; set; }
+
+    protected string MoveEnglishName => Move?.GetMoveName(PokeConst.EnglishLanguage);
+    protected bool IsMoveLoadDisabled => IsInitializing || IsLoading || string.IsNullOrWhiteSpace(MoveName);
     
-    public string MoveName { get; set; }
-    public bool IsLoading { get; set; }
-    public bool IsInitializing { get; set; }
-    public Move Move { get; set; }
-    public string MoveEnglishName => Move?.Names.First(n => n.Language.Name == "en").Name;
-
-    protected bool IsButtonDisabled => IsInitializing || IsLoading || string.IsNullOrWhiteSpace(Language) || string.IsNullOrWhiteSpace(MoveName);
-
-    public string Language
+    protected bool IsLoading { get; private set; }
+    protected bool IsInitializing { get; private set; }
+    protected Move Move { get; private set; }
+    protected Dictionary<string, string> Languages { get; private set; }
+    protected Dictionary<string, string> SearchSuggestions { get; } = new();
+    protected ObservableCollection<NameByLanguage> SearchHistory { get; private set; } = new();
+    protected string MoveName { get; set; } = string.Empty;
+    
+    protected string Language
     {
         get => _language;
         set
         {
-            bool wasNull = string.IsNullOrWhiteSpace(_language);
             _language = value;
-            if (!wasNull)
-            {
-                OnLanguageChange();
-            }
+
+            OnLanguageChange();
         }
     }
 
-    protected ObservableCollection<NameByLanguage> LastValues { get; set; }
-
     private void OnLanguageChange()
     {
-        LocalStorageService.SetItemAsync("LastLanguage", Language);
+        if (Language is not null)
+        {
+            LocalStorageService.SetItemAsync(LastLanguageStorageKey, Language).AndForget();
+        }
     }
-
-    private string _language;
 
     protected override async Task OnInitializedAsync()
     {
-        IsInitializing = true;
-        languages = await PokeApi.GetLanguages();
-        Language = await LocalStorageService.GetItemAsync<string>("LastLanguage");
-        LastValues = new ObservableCollection<NameByLanguage>(await LocalStorageService.GetItemAsync<NameByLanguage[]>("LastValues") ?? Array.Empty<NameByLanguage>());
-        LastValues.CollectionChanged += async (_, a) =>
+        async Task InitializeSearchHistory()
         {
-            await LocalStorageService.SetItemAsync("LastValues", LastValues.ToArray());
-            if (LastValues.Count >= 10 && a.Action == NotifyCollectionChangedAction.Add)
+            NameByLanguage[] searchHistoryFromLocalStorage = await LocalStorageService.GetItemAsync<NameByLanguage[]>(SearchHistoryStorageKey) ?? Array.Empty<NameByLanguage>();
+
+            if (searchHistoryFromLocalStorage.Length > 3)
             {
-                LastValues.RemoveAt(0);
+                searchHistoryFromLocalStorage = searchHistoryFromLocalStorage.TakeLast(3).ToArray();
             }
-        };
+
+            SearchHistory = new ObservableCollection<NameByLanguage>(searchHistoryFromLocalStorage);
+            SearchHistory.CollectionChanged += async (_, a) => { await LocalStorageService.SetItemAsync(SearchHistoryStorageKey, SearchHistory.ToArray()); };
+        }
+        
+        IsInitializing = true;
+        
+        Languages = await PokeApi.GetLanguages();
+        Language = await LocalStorageService.GetItemAsync<string>(LastLanguageStorageKey) ?? PokeConst.EnglishLanguage;
+        
+        await InitializeSearchHistory();
+
         IsInitializing = false;
     }
 
     protected async Task LoadMove()
     {
-        IsLoading = true;
-        Move = await PokeApi.GetMove(MoveName, Language);
-
-        string moveNameInLanguage = Move?.Names.FirstOrDefault(n => n.Language.Name == Language)?.Name ?? MoveName; //todo refactor
-        
-        NameByLanguage pair = new(moveNameInLanguage, Language);
-        if (Move is not null && !LastValues.Contains(pair))
+        if (IsMoveLoadDisabled)
         {
-            LastValues.Add(pair);
+            return;
+        }
+
+        IsLoading = true;
+
+        if (SearchSuggestions.ContainsValue(MoveName))
+        {
+            Move = await PokeApi.GetMove(SearchSuggestions.Single(k => k.Value == MoveName).Key, PokeConst.EnglishLanguage);
+        }
+        else
+        {
+            Move = await PokeApi.GetMove(MoveName.Trim(), Language);
+        }
+
+        SearchSuggestions.Clear();
+
+        if (Move is null)
+        {
+            Move[] other = await PokeApi.SearchMoves(MoveName.Trim(), Language);
+
+            if (other.Length == 1)
+            {
+                Move = other[0];
+            }
+            else if (other.Length == 0)
+            {
+                Console.WriteLine("Not found"); // TODO handle such case
+            }
+            else
+            {
+                foreach (Move move in other)
+                {
+                    SearchSuggestions.Add(move.Name, move.GetMoveName(Language));
+                }
+            }
+        }
+
+        if (Move is not null)
+        {
+            MoveName = Move.GetMoveName(Language);
+            NameByLanguage nameByLanguage = new(MoveName, Language);
+
+            if (!SearchHistory.Contains(nameByLanguage))
+            {
+                if (SearchHistory.Count >= 3)
+                {
+                    SearchHistory.RemoveAt(0);
+                }
+
+                SearchHistory.Insert(0, nameByLanguage);
+            }
         }
 
         IsLoading = false;
     }
 
-    protected async Task OnLastValueClick(NameByLanguage lastValue)
+    protected async Task LoadItemFromHistory(NameByLanguage nameByLanguage)
     {
-        MoveName = lastValue.Name;
-        Language = lastValue.Language;
+        MoveName = nameByLanguage.Name;
+        Language = nameByLanguage.Language;
         await LoadMove();
     }
-
-    protected record NameByLanguage(string Name, string Language);
 }

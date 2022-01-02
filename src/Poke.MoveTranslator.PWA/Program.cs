@@ -3,9 +3,9 @@ using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.SystemTextJson;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.Extensions.Caching.Memory;
 using MudBlazor.Services;
 using Poke.MoveTranslator.PWA.Services;
-using Poke.MoveTranslator.PWA.Services.Cache;
 using Poke.MoveTranslator.PWA.Services.PokeApi;
 using PokeApiNet;
 
@@ -27,6 +27,7 @@ public static class Program
     private static void ConfigureServices(WebAssemblyHostBuilder builder)
     {
         builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+        builder.Services.AddMemoryCache();
         builder.Services.AddMudServices();
         builder.Services.AddBlazoredLocalStorage();
 
@@ -38,10 +39,7 @@ public static class Program
     {
         GraphQLHttpClient pokemonGraphQLApi = new("https://beta.pokeapi.co/graphql/v1beta", new SystemTextJsonSerializer());
         PokeApiClient pokeApiClient = c.GetRequiredService<PokeApiClient>();
-        
-        ILocalStorageService localStorageService = c.GetRequiredService<ILocalStorageService>();
-        PokemonFacade pokemonFacade = new(pokeApiClient, pokemonGraphQLApi);
-        
-        return new PokemonApiLocalStorageCache(pokemonFacade, localStorageService);
+        IMemoryCache memoryCache = c.GetRequiredService<IMemoryCache>();
+        return new PokemonFacade(pokeApiClient, pokemonGraphQLApi, memoryCache);
     }
 }

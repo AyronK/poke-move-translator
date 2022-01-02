@@ -1,0 +1,84 @@
+@using Microsoft.Extensions.Logging
+
+@inject ILogger<ErrorHandler> Logger
+@inject ISnackbar Snackbar
+
+<CascadingValue Value=this>
+    @ChildContent
+</CascadingValue>
+
+@code {
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    public void ProcessError(Exception ex)
+    {
+        Logger.LogError("Error:ProcessError - Type: {Type} Message: {Message}",
+            ex.GetType(), ex.Message);
+
+        Snackbar.Configuration.SnackbarVariant = Variant.Filled;
+        Snackbar.Add(ex.Message + ex.StackTrace, Severity.Error);
+    }
+
+    public Action Bind(Action action)
+    {
+        return () =>
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception e)
+            {
+                ProcessError(e);
+            }
+        };
+    }
+
+    public Action<T> Bind<T>(Action<T> action)
+    {
+        return (args) =>
+        {
+            try
+            {
+                action(args);
+            }
+            catch (Exception e)
+            {
+                ProcessError(e);
+            }
+        };
+    }
+
+    public Func<Task> Bind(Func<Task> action)
+    {
+        return async () =>
+        {
+            try
+            {
+                await action();
+            }
+            catch (Exception e)
+            {
+                ProcessError(e);
+            }
+        };
+    }
+
+    public Func<T, Task> Bind<T>(Func<T, Task> action)
+    {
+        return async (args) =>
+        {
+            try
+            {
+                await action(args);
+            }
+            catch (Exception e)
+            {
+                ProcessError(e);
+            }
+        };
+    }
+
+}

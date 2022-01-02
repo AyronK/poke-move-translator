@@ -1,0 +1,40 @@
+@using Poke.MoveTranslator.PWA.Models.Common
+@namespace Poke.MoveTranslator.PWA.Components
+
+<MudGrid Class="p-0">
+    <MudItem xs="8" Class="p-0">
+        <MudText Typo="Typo.subtitle2">Search History</MudText>
+    </MudItem>
+    <MudItem xs="4" Class="p-0">
+        <MudText Align="Align.End">
+            <MudIconButton Icon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" aria-label="delete" OnClick="@(ErrorHandler.Bind(async () => await OnSearchHistoryClear.InvokeAsync()))"/>
+        </MudText>
+    </MudItem>
+</MudGrid>
+<MudChipSet AllClosable="true" Class="py-1" Style="overflow-x: auto;white-space: nowrap">
+    @foreach (NameByLanguage item in SearchHistory)
+    {
+        <MudChip
+            Text="@item.Name"
+            Size="@Size.Small"
+            OnClick="@(ErrorHandler.Bind(async () => await OnSearchHistoryValueSelect.InvokeAsync(item)))"
+            OnClose="@(ErrorHandler.Bind(async () => await OnSearchHistoryValueRemove.InvokeAsync(item)))"/>
+    }
+</MudChipSet>
+
+@code {
+    [CascadingParameter]
+    public ErrorHandler ErrorHandler { get; set; }
+
+    [Parameter]
+    public IEnumerable<NameByLanguage> SearchHistory { get; set; }
+    
+    [Parameter]
+    public EventCallback<NameByLanguage> OnSearchHistoryValueSelect { get; set; }
+
+    [Parameter]
+    public EventCallback OnSearchHistoryClear { get; set; }
+
+    [Parameter]
+    public EventCallback<NameByLanguage> OnSearchHistoryValueRemove { get; set; }
+}
