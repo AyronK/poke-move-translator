@@ -5,6 +5,73 @@
 <div class="move-translator" style="@(Move is null ? "height:auto" : "")">
     <div class="move-translator-content">
         <MudPaper Class="d-flex flex-column" Elevation="0" Square="true">
+            <MudHidden Breakpoint="Breakpoint.MdAndDown">
+                @if (!IsInitializing)
+                {
+                    <MudGrid Justify="@Justify.Center">
+                        @if (MoveNameSuggestions.Count > 0)
+                        {
+                            <MudItem xs="12" Class="pb-0">
+                                <MudGrid Class="p-0">
+                                    <MudItem xs="8" Class="p-0">
+                                        <MudText Typo="Typo.subtitle2">Did you mean?</MudText>
+                                    </MudItem>
+                                    <MudItem xs="4" Class="p-0">
+                                        <MudText Align="Align.End">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" aria-label="delete" OnClick="@(() => MoveNameSuggestions.Clear())"/>
+                                        </MudText>
+                                    </MudItem>
+                                </MudGrid>
+
+
+                                <MudChipSet AllClosable="false" Class="py-1" Style="overflow-x: auto;white-space: nowrap">
+                                    @foreach (string suggestion in MoveNameSuggestions.Values)
+                                    {
+                                        <MudChip Text="@suggestion" Variant="Variant.Outlined" OnClick="@(ErrorHandler.Bind(async () => { MoveName = suggestion; await LoadMove();}))" Size="@Size.Small"/>
+                                    }
+                                </MudChipSet>
+                            </MudItem>
+                        }
+                        else if (SearchHistory.Count > 0)
+                        {
+                            <MudItem xs="12" Class="pb-0">
+                                <MudGrid Class="p-0">
+                                    <MudItem xs="8" Class="p-0">
+                                        <MudText Typo="Typo.subtitle2">Search History</MudText>
+                                    </MudItem>
+                                    <MudItem xs="4" Class="p-0">
+                                        <MudText Align="Align.End">
+                                            <MudIconButton Icon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" aria-label="delete" OnClick="@(() => SearchHistory.Clear())"/>
+                                        </MudText>
+                                    </MudItem>
+                                </MudGrid>
+                                <MudChipSet AllClosable="true" Class="py-1" Style="overflow-x: auto;white-space: nowrap">
+                                    @foreach (NameByLanguage item in SearchHistory)
+                                    {
+                                        <MudChip Text="@item.Name" OnClick="@(ErrorHandler.Bind(() => OnLastValueClick(item)))" OnClose="@(() => SearchHistory.Remove(item))" Size="@Size.Small"/>
+                                    }
+                                </MudChipSet>
+                            </MudItem>
+                        }
+                        <MudItem xs="4">
+                            <MudSelect T="string" @bind-Value="Language" Label="Language" AnchorOrigin="Origin.BottomCenter" Disabled="@IsLoading">
+                                @foreach (string languageCode in Languages.Keys)
+                                {
+                                    <MudSelectItem Value="@languageCode">@(Languages[languageCode])</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="5">
+                            <MudTextField @bind-Value="MoveName" Label="Move name" Variant="Variant.Text" Disabled="@IsLoading" AutoFocus="true"
+                                          Immediate="true" Clearable="true"
+                                          OnKeyDown="@(ErrorHandler.Bind(async (KeyboardEventArgs k) => { if (k.Key == "Enter"){await LoadMove();}}))"/>
+                        </MudItem>
+                        <MudItem xs="3">
+                            <MudFab Color="Color.Primary" Icon="@Icons.Material.Filled.PlayCircleFilled" aria-label="play" OnClick="@ErrorHandler.Bind(LoadMove)" Class="ml-auto d-flex d-sm-inline-flex" Disabled="IsMoveLoadDisabled"/>
+                        </MudItem>
+                    </MudGrid>
+                }
+            </MudHidden>
 
             @if (IsLoading || IsInitializing)
             {
@@ -48,73 +115,75 @@
             }
         </MudPaper>
     </div>
-    <div class="move-translator-footer">
-        <MudPaper Elevation="8" Square="true" Class="pa-4" Style="position: fixed;bottom:0;left: 0;right: 0">
-            @if (!IsInitializing)
-            {
-                <MudGrid Justify="@Justify.Center">
-                    @if (MoveNameSuggestions.Count > 0)
-                    {
-                        <MudItem xs="12" Class="pb-0">
-                            <MudGrid Class="p-0">
-                                <MudItem xs="8" Class="p-0">
-                                    <MudText Typo="Typo.subtitle2">Did you mean?</MudText>
-                                </MudItem>
-                                <MudItem xs="4" Class="p-0">
-                                    <MudText Align="Align.End">
-                                        <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" aria-label="delete" OnClick="@(() => MoveNameSuggestions.Clear())"/>
-                                    </MudText>
-                                </MudItem>
-                            </MudGrid>
+    <MudHidden Breakpoint="Breakpoint.LgAndUp">
+        <footer class="move-translator-footer">
+            <MudPaper Elevation="8" Square="true" Class="pa-4" Style="position: fixed;bottom:0;left: 0;right: 0">
+                @if (!IsInitializing)
+                {
+                    <MudGrid Justify="@Justify.Center">
+                        @if (MoveNameSuggestions.Count > 0)
+                        {
+                            <MudItem xs="12" Class="pb-0">
+                                <MudGrid Class="p-0">
+                                    <MudItem xs="8" Class="p-0">
+                                        <MudText Typo="Typo.subtitle2">Did you mean?</MudText>
+                                    </MudItem>
+                                    <MudItem xs="4" Class="p-0">
+                                        <MudText Align="Align.End">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" aria-label="delete" OnClick="@(() => MoveNameSuggestions.Clear())"/>
+                                        </MudText>
+                                    </MudItem>
+                                </MudGrid>
 
 
-                            <MudChipSet AllClosable="false" Class="py-1" Style="overflow-x: auto;white-space: nowrap">
-                                @foreach (string suggestion in MoveNameSuggestions.Values)
+                                <MudChipSet AllClosable="false" Class="py-1" Style="overflow-x: auto;white-space: nowrap">
+                                    @foreach (string suggestion in MoveNameSuggestions.Values)
+                                    {
+                                        <MudChip Text="@suggestion" Variant="Variant.Outlined" OnClick="@(ErrorHandler.Bind(async () => { MoveName = suggestion; await LoadMove();}))" Size="@Size.Small"/>
+                                    }
+                                </MudChipSet>
+                            </MudItem>
+                        }
+                        else if (SearchHistory.Count > 0)
+                        {
+                            <MudItem xs="12" Class="pb-0">
+                                <MudGrid Class="p-0">
+                                    <MudItem xs="8" Class="p-0">
+                                        <MudText Typo="Typo.subtitle2">Search History</MudText>
+                                    </MudItem>
+                                    <MudItem xs="4" Class="p-0">
+                                        <MudText Align="Align.End">
+                                            <MudIconButton Icon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" aria-label="delete" OnClick="@(() => SearchHistory.Clear())"/>
+                                        </MudText>
+                                    </MudItem>
+                                </MudGrid>
+                                <MudChipSet AllClosable="true" Class="py-1" Style="overflow-x: auto;white-space: nowrap">
+                                    @foreach (NameByLanguage item in SearchHistory)
+                                    {
+                                        <MudChip Text="@item.Name" OnClick="@(ErrorHandler.Bind(() => OnLastValueClick(item)))" OnClose="@(() => SearchHistory.Remove(item))" Size="@Size.Small"/>
+                                    }
+                                </MudChipSet>
+                            </MudItem>
+                        }
+                        <MudItem xs="4">
+                            <MudSelect T="string" @bind-Value="Language" Label="Language" AnchorOrigin="Origin.BottomCenter" Disabled="@IsLoading">
+                                @foreach (string languageCode in Languages.Keys)
                                 {
-                                    <MudChip Text="@suggestion" Variant="Variant.Outlined" OnClick="@(ErrorHandler.Bind(async () => { MoveName = suggestion; await LoadMove();}))" Size="@Size.Small"/>
+                                    <MudSelectItem Value="@languageCode">@(Languages[languageCode])</MudSelectItem>
                                 }
-                            </MudChipSet>
+                            </MudSelect>
                         </MudItem>
-                    }
-                    else if (SearchHistory.Count > 0)
-                    {
-                        <MudItem xs="12" Class="pb-0">
-                            <MudGrid Class="p-0">
-                                <MudItem xs="8" Class="p-0">
-                                    <MudText Typo="Typo.subtitle2">Search History</MudText>
-                                </MudItem>
-                                <MudItem xs="4" Class="p-0">
-                                    <MudText Align="Align.End">
-                                        <MudIconButton Icon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" aria-label="delete" OnClick="@(() => SearchHistory.Clear())"/>
-                                    </MudText>
-                                </MudItem>
-                            </MudGrid>
-                            <MudChipSet AllClosable="true" Class="py-1" Style="overflow-x: auto;white-space: nowrap">
-                                @foreach (NameByLanguage item in SearchHistory)
-                                {
-                                    <MudChip Text="@item.Name" OnClick="@(ErrorHandler.Bind(() => OnLastValueClick(item)))" OnClose="@(() => SearchHistory.Remove(item))" Size="@Size.Small"/>
-                                }
-                            </MudChipSet>
+                        <MudItem xs="5">
+                            <MudTextField @bind-Value="MoveName" Label="Move name" Variant="Variant.Text" Disabled="@IsLoading" AutoFocus="true"
+                                          Immediate="true" Clearable="true"
+                                          OnKeyDown="@(ErrorHandler.Bind(async (KeyboardEventArgs k) => { if (k.Key == "Enter"){await LoadMove();}}))"/>
                         </MudItem>
-                    }
-                    <MudItem xs="4">
-                        <MudSelect T="string" @bind-Value="Language" Label="Language" AnchorOrigin="Origin.BottomCenter" Disabled="@IsLoading">
-                            @foreach (string languageCode in Languages.Keys)
-                            {
-                                <MudSelectItem Value="@languageCode">@(Languages[languageCode])</MudSelectItem>
-                            }
-                        </MudSelect>
-                    </MudItem>
-                    <MudItem xs="5">
-                        <MudTextField @bind-Value="MoveName" Label="Move name" Variant="Variant.Text" Disabled="@IsLoading" AutoFocus="true"
-                                      Immediate="true" Clearable="true"
-                                      OnKeyDown="@(ErrorHandler.Bind(async (KeyboardEventArgs k) => { if (k.Key == "Enter"){await LoadMove();}}))"/>
-                    </MudItem>
-                    <MudItem xs="3">
-                        <MudFab Color="Color.Primary" Icon="@Icons.Material.Filled.PlayCircleFilled" aria-label="play" OnClick="@ErrorHandler.Bind(LoadMove)" Class="ml-auto d-flex d-sm-inline-flex" Disabled="IsMoveLoadDisabled"/>
-                    </MudItem>
-                </MudGrid>
-            }
-        </MudPaper>
-    </div>
+                        <MudItem xs="3">
+                            <MudFab Color="Color.Primary" Icon="@Icons.Material.Filled.PlayCircleFilled" aria-label="play" OnClick="@ErrorHandler.Bind(LoadMove)" Class="ml-auto d-flex d-sm-inline-flex" Disabled="IsMoveLoadDisabled"/>
+                        </MudItem>
+                    </MudGrid>
+                }
+            </MudPaper>
+        </footer>
+    </MudHidden>
 </div>
